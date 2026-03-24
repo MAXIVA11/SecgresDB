@@ -57,11 +57,3 @@ python main.py --host localhost --port 5432 --database mydb --user postgres --pa
 | `--output-format` | `table` or `json` (default: table) |
 | `--summary-only` | Show only summary, not detailed table |
 | `--quiet` | Suppress progress output |
-
----
-
-## 🧪 Testing with a sample database
-You can quickly create a test database with fake sensitive data using the provided script:
-```bash
-python tests/setup_test_db.py --host localhost --user postgres --password pass
-```
