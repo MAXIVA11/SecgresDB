@@ -1,6 +1,6 @@
 # 🔍 SecgresDB
 
-**SecgresDB** is a powerful CLI tool that scans PostgreSQL databases for sensitive data, helping you ensure compliance with regulations such as **GDPR, CCPA, PCI‑DSS, GLBA**, and more. It uses regex patterns to identify personal identifiable information (PII), payment data, and other regulated content, then outputs a beautiful, color‑coded report with regulatory context and risk levels.
+**SecgresDB** is a powerful CLI tool that scans PostgreSQL databases for sensitive data, helping you ensure compliance with regulations such as **GDPR, CCPA, PCI‑DSS, GLBA**, and more. It uses regex patterns to identify personal identifiable information (PII), payment data, and other regulated content, then outputs a report with regulatory context and risk levels.
 
 ![Screenshot](logo.png)  <!-- optional: add a screenshot later -->
 
