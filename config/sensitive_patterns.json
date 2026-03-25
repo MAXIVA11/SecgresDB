@@ -3,149 +3,58 @@
     {
       "name": "Email",
       "description": "Email addresses",
-      "regex": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+      "regex": "[\\w\\.=-]+@[\\w\\.-]+\\.[\\w]{2,3}",
       "confidence": "high",
       "regulations": ["GDPR", "CCPA"]
     },
     {
-      "name": "Credit Card - Visa",
-      "description": "Visa credit card numbers",
-      "regex": "\\b4[0-9]{12}(?:[0-9]{3})?\\b",
+      "name": "SSN (US)",
+      "description": "US Social Security Number (valid format, excluding invalid numbers)",
+      "regex": "\\b(?!000|666|9\\d{2})([0-8]\\d{2}|7([0-6]\\d))([-]?|\\s{1})(?!00)\\d\\d\\2(?!0000)\\d{4}\\b",
+      "confidence": "high",
+      "regulations": ["US Privacy Act", "GLBA"]
+    },
+    {
+      "name": "IP Address (IPv4)",
+      "description": "IPv4 addresses",
+      "regex": "\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b",
+      "confidence": "low",
+      "regulations": ["GDPR"]
+    },
+    {
+      "name": "Date of Birth (MM/DD/YYYY)",
+      "description": "Dates in MM/DD/YYYY format",
+      "regex": "\\b(1[0-2]|0?[1-9])[-/](3[01]|[12]\\d|0?[1-9])[-/]\\d{4}\\b",
+      "confidence": "low",
+      "regulations": ["GDPR", "HIPAA"]
+    },
+    {
+      "name": "Credit Card - MasterCard",
+      "description": "MasterCard credit card numbers (including new 2-series ranges)",
+      "regex": "\\b(?:5[1-5][0-9]{2}|222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720)[0-9]{12}\\b",
       "confidence": "high",
       "regulations": ["PCI-DSS"]
     },
     {
-      "name": "Credit Card - MasterCard",
-      "description": "MasterCard credit card numbers",
-      "regex": "\\b5[1-5][0-9]{14}\\b",
+      "name": "Credit Card - Visa",
+      "description": "Visa credit card numbers (with or without separators)",
+      "regex": "\\b4[0-9]{3}(?:[\\s\\-.]?[0-9]{4}){3}\\b",
       "confidence": "high",
       "regulations": ["PCI-DSS"]
     },
     {
       "name": "Credit Card - Amex",
-      "description": "American Express credit card numbers",
+      "description": "American Express credit card numbers (15 digits)",
       "regex": "\\b3[47][0-9]{13}\\b",
       "confidence": "high",
       "regulations": ["PCI-DSS"]
     },
     {
-      "name": "SSN (US)",
-      "description": "US Social Security Number (with or without dashes)",
-      "regex": "\\b\\d{3}-?\\d{2}-?\\d{4}\\b",
-      "confidence": "high",
-      "regulations": ["US Privacy Act", "GLBA"]
-    },
-    {
-      "name": "Phone Number (US)",
-      "description": "US phone numbers with area code",
-      "regex": "\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b",
-      "confidence": "medium",
-      "regulations": ["GDPR", "CCPA"]
-    },
-    {
-      "name": "IP Address (IPv4)",
-      "description": "IPv4 addresses",
-      "regex": "\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\b",
+      "name": "US ZIP Code",
+      "description": "US ZIP code (5 digits or 5+4)",
+      "regex": "\\b\\d{5}(?:-\\d{4})?\\b",
       "confidence": "low",
-      "regulations": ["GDPR"]
-    },
-    {
-      "name": "Passport Number (US)",
-      "description": "US Passport Number (9 alphanumeric)",
-      "regex": "\\b[A-Z][0-9]{8}\\b",
-      "confidence": "medium",
-      "regulations": ["US Privacy Act"]
-    },
-    {
-      "name": "Date of Birth",
-      "description": "Dates in common formats (YYYY-MM-DD, MM/DD/YYYY, etc.)",
-      "regex": "\\b\\d{4}[-/]\\d{2}[-/]\\d{2}\\b|\\b\\d{2}[-/]\\d{2}[-/]\\d{4}\\b",
-      "confidence": "low",
-      "regulations": ["GDPR", "HIPAA"]
-    },
-    {
-      "name": "Bank Account Number (US)",
-      "description": "US bank account number (10-12 digits)",
-      "regex": "\\b\\d{10,12}\\b",
-      "confidence": "medium",
-      "regulations": ["GLBA"]
-    },
-    {
-      "name": "EIN (US)",
-      "description": "Employer Identification Number (XX-XXXXXXX)",
-      "regex": "\\b\\d{2}-\\d{7}\\b",
-      "confidence": "high",
-      "regulations": ["US Privacy Act", "GLBA"]
-    },
-    {
-      "name": "Driver's License (US)",
-      "description": "US driver's license (generic alphanumeric, 5-15 chars)",
-      "regex": "\\b[A-Z0-9]{5,15}\\b",
-      "confidence": "low",
-      "regulations": ["US Privacy Act"]
-    },
-    {
-      "name": "Medical Record Number",
-      "description": "Common medical record number formats (e.g., MRN123456)",
-      "regex": "\\b(MRN|MR|MED)[0-9]{6,8}\\b",
-      "confidence": "medium",
-      "regulations": ["HIPAA"]
-    },
-    {
-      "name": "Health Insurance Claim Number (HICN)",
-      "description": "US Medicare HICN (alphanumeric, up to 11 chars)",
-      "regex": "\\b[A-Z0-9]{9,11}\\b",
-      "confidence": "medium",
-      "regulations": ["HIPAA"]
-    },
-    {
-      "name": "IBAN",
-      "description": "International Bank Account Number",
-      "regex": "\\b[A-Z]{2}[0-9]{2}[A-Z0-9]{4,30}\\b",
-      "confidence": "medium",
-      "regulations": ["GDPR", "GLBA"]
-    },
-    {
-      "name": "SWIFT/BIC",
-      "description": "SWIFT/BIC code (8 or 11 alphanumeric)",
-      "regex": "\\b[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\\b",
-      "confidence": "medium",
-      "regulations": ["GLBA"]
-    },
-    {
-      "name": "MAC Address",
-      "description": "MAC address (XX:XX:XX:XX:XX:XX)",
-      "regex": "\\b[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}\\b",
-      "confidence": "low",
-      "regulations": ["GDPR"]
-    },
-    {
-      "name": "VIN (Vehicle Identification Number)",
-      "description": "Vehicle Identification Number (17 alphanumeric, no I,O,Q)",
-      "regex": "\\b[A-HJ-NPR-Z0-9]{17}\\b",
-      "confidence": "medium",
-      "regulations": ["US Privacy Act"]
-    },
-    {
-      "name": "Biometric Hash",
-      "description": "Placeholder for biometric data (hashed values)",
-      "regex": "\\b[0-9a-f]{64}\\b",
-      "confidence": "low",
-      "regulations": ["GDPR", "HIPAA", "BIPA"]
-    },
-    {
-      "name": "EU VAT Number",
-      "description": "European Union VAT number (e.g., GB123456789)",
-      "regex": "\\b[A-Z]{2}[0-9A-Z]{2,12}\\b",
-      "confidence": "medium",
-      "regulations": ["GDPR"]
-    },
-    {
-      "name": "UK National Insurance Number",
-      "description": "UK National Insurance Number (format: AA 12 34 56 A)",
-      "regex": "\\b[A-Z]{2}[0-9]{6}[A-Z]{1}\\b",
-      "confidence": "medium",
-      "regulations": ["GDPR", "UK Data Protection Act"]
+      "regulations": []
     }
   ]
 }
