@@ -62,6 +62,90 @@
       "regex": "\\b\\d{4}[-/]\\d{2}[-/]\\d{2}\\b|\\b\\d{2}[-/]\\d{2}[-/]\\d{4}\\b",
       "confidence": "low",
       "regulations": ["GDPR", "HIPAA"]
+    },
+    {
+      "name": "Bank Account Number (US)",
+      "description": "US bank account number (10-12 digits)",
+      "regex": "\\b\\d{10,12}\\b",
+      "confidence": "medium",
+      "regulations": ["GLBA"]
+    },
+    {
+      "name": "EIN (US)",
+      "description": "Employer Identification Number (XX-XXXXXXX)",
+      "regex": "\\b\\d{2}-\\d{7}\\b",
+      "confidence": "high",
+      "regulations": ["US Privacy Act", "GLBA"]
+    },
+    {
+      "name": "Driver's License (US)",
+      "description": "US driver's license (generic alphanumeric, 5-15 chars)",
+      "regex": "\\b[A-Z0-9]{5,15}\\b",
+      "confidence": "low",
+      "regulations": ["US Privacy Act"]
+    },
+    {
+      "name": "Medical Record Number",
+      "description": "Common medical record number formats (e.g., MRN123456)",
+      "regex": "\\b(MRN|MR|MED)[0-9]{6,8}\\b",
+      "confidence": "medium",
+      "regulations": ["HIPAA"]
+    },
+    {
+      "name": "Health Insurance Claim Number (HICN)",
+      "description": "US Medicare HICN (alphanumeric, up to 11 chars)",
+      "regex": "\\b[A-Z0-9]{9,11}\\b",
+      "confidence": "medium",
+      "regulations": ["HIPAA"]
+    },
+    {
+      "name": "IBAN",
+      "description": "International Bank Account Number",
+      "regex": "\\b[A-Z]{2}[0-9]{2}[A-Z0-9]{4,30}\\b",
+      "confidence": "medium",
+      "regulations": ["GDPR", "GLBA"]
+    },
+    {
+      "name": "SWIFT/BIC",
+      "description": "SWIFT/BIC code (8 or 11 alphanumeric)",
+      "regex": "\\b[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\\b",
+      "confidence": "medium",
+      "regulations": ["GLBA"]
+    },
+    {
+      "name": "MAC Address",
+      "description": "MAC address (XX:XX:XX:XX:XX:XX)",
+      "regex": "\\b[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}\\b",
+      "confidence": "low",
+      "regulations": ["GDPR"]
+    },
+    {
+      "name": "VIN (Vehicle Identification Number)",
+      "description": "Vehicle Identification Number (17 alphanumeric, no I,O,Q)",
+      "regex": "\\b[A-HJ-NPR-Z0-9]{17}\\b",
+      "confidence": "medium",
+      "regulations": ["US Privacy Act"]
+    },
+    {
+      "name": "Biometric Hash",
+      "description": "Placeholder for biometric data (hashed values)",
+      "regex": "\\b[0-9a-f]{64}\\b",
+      "confidence": "low",
+      "regulations": ["GDPR", "HIPAA", "BIPA"]
+    },
+    {
+      "name": "EU VAT Number",
+      "description": "European Union VAT number (e.g., GB123456789)",
+      "regex": "\\b[A-Z]{2}[0-9A-Z]{2,12}\\b",
+      "confidence": "medium",
+      "regulations": ["GDPR"]
+    },
+    {
+      "name": "UK National Insurance Number",
+      "description": "UK National Insurance Number (format: AA 12 34 56 A)",
+      "regex": "\\b[A-Z]{2}[0-9]{6}[A-Z]{1}\\b",
+      "confidence": "medium",
+      "regulations": ["GDPR", "UK Data Protection Act"]
     }
   ]
 }
