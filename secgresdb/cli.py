@@ -81,7 +81,7 @@ High: {confidence_counts['high']}
 Medium: {confidence_counts['medium']}
 Low: {confidence_counts['low']}
     """
-    panel = Panel(Text.from_markup(summary_text), title="HeimdallDB Scan Report", border_style="green")
+    panel = Panel(Text.from_markup(summary_text), title="SecgresDB Scan Report", border_style="green")
     console.print(panel)
 
 def print_detailed_table(results: Dict[str, Dict[str, List[str]]], patterns_info: Dict[str, Any]):
@@ -150,7 +150,7 @@ def main():
     )
     try:
         if not args.quiet:
-            console.print("[bold green]HeimdallDB[/bold green] - PostgreSQL Sensitive Data Scanner\n")
+            console.print("[bold green]SecgresDB[/bold green] - PostgreSQL Sensitive Data Scanner\n")
         connector.connect()
 
         # Get tables
