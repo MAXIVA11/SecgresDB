@@ -6,7 +6,13 @@
 
 **SecgresDB** is a CLI tool that scans PostgreSQL databases for sensitive data, helping Data Protection Officers and engineering teams find and evidence compliance gaps against **GDPR, CCPA, PCI-DSS, GLBA, HIPAA**, and more. It samples table data, matches it against a validated pattern library (with checksum/format validators and column-name-aware confidence scoring), and produces a report you can read on screen, pipe into CI, or file as audit evidence.
 
-![Screenshot](logo.png)
+<p align="center"><img src="logo.png" width="260" alt="SecgresDB"></p>
+
+### Why this exists
+
+Most orgs don't actually know where their PII lives — it accumulates in staging tables, forgotten columns, and "temporary" fields nobody cleaned up. That's the gap between "we're GDPR compliant" and actually being able to prove it in an audit. Point SecgresDB at a database and in minutes you get a table-by-table map of what's sensitive, which regulation it implicates (GDPR, CCPA, PCI-DSS, GLBA...), and how confident the finding is — without ever printing the actual sensitive values back at you.
+
+<p align="center"><img src="docs/demo.svg" width="640" alt="SecgresDB scan summary showing overall risk, statistics, and regulations impacted"></p>
 
 ---
 
@@ -186,3 +192,9 @@ Patterns live in `config/sensitive_patterns.json`. Each entry supports:
 - No finding ever includes the actual sensitive value — only the column, pattern name, match coverage, and regulatory tags. Reports are safe to share without becoming a second copy of the PII they describe.
 - Credentials are never required as plaintext: `--password` is accepted for convenience but `PGPASSWORD`/`SECGRESDB_PASSWORD` or an interactive prompt are preferred, and config files explicitly reject a `password` key.
 - `--sslmode` defaults to `prefer`; set it to `require` or stricter for anything beyond local testing.
+
+---
+
+## 🤝 Contributing
+
+Bug reports, new detection patterns, and PRs are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for the dev setup, how to add a pattern safely (checksum validators, name-hint gating), and a list of good starting issues if you're not sure where to jump in.
