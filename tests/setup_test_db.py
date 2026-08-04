@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """
-Setup script to create a test PostgreSQL database with fake sensitive data.
+Setup script to create a test PostgreSQL database with realistic fake sensitive data.
 Run this before testing SecgresDB.
 """
 
 import argparse
+import getpass
+import os
+import sys
 import psycopg2
 from psycopg2 import sql
 from faker import Faker
@@ -13,24 +16,34 @@ import random
 fake = Faker()
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Create test database for SecgresDB")
+    parser = argparse.ArgumentParser(description="Create a realistic test database for SecgresDB")
     parser.add_argument("--host", default="localhost", help="PostgreSQL host")
     parser.add_argument("--port", type=int, default=5432, help="PostgreSQL port")
     parser.add_argument("--user", default="postgres", help="Database user")
-    parser.add_argument("--password", default="password", help="Database password")
+    parser.add_argument("--password", default=None,
+                        help="Database password. Omit to read PGPASSWORD or be prompted interactively.")
     parser.add_argument("--dbname", default="testdb", help="Database name to create")
     parser.add_argument("--drop", action="store_true", help="Drop existing database if it exists")
+    parser.add_argument("--rows", type=int, default=500, help="Number of rows per table (default: 500)")
     return parser.parse_args()
 
+def resolve_password(args):
+    if args.password:
+        return args.password
+    env_password = os.environ.get("PGPASSWORD")
+    if env_password:
+        return env_password
+    if not sys.stdin.isatty():
+        print("Error: no password available. Pass --password, set PGPASSWORD, or run interactively.", file=sys.stderr)
+        sys.exit(1)
+    return getpass.getpass(f"Password for {args.user}@{args.host}: ")
+
 def create_database(conn_params, dbname):
-    """Create a new database if it doesn't exist."""
-    # Connect to default 'postgres' database to manage databases
     admin_params = conn_params.copy()
     admin_params['dbname'] = 'postgres'
     conn = psycopg2.connect(**admin_params)
     conn.autocommit = True
     cursor = conn.cursor()
-    # Check if database exists
     cursor.execute("SELECT 1 FROM pg_database WHERE datname = %s", (dbname,))
     exists = cursor.fetchone()
     if exists:
@@ -42,13 +55,11 @@ def create_database(conn_params, dbname):
     conn.close()
 
 def drop_database(conn_params, dbname):
-    """Drop the database if it exists."""
     admin_params = conn_params.copy()
     admin_params['dbname'] = 'postgres'
     conn = psycopg2.connect(**admin_params)
     conn.autocommit = True
     cursor = conn.cursor()
-    # Terminate existing connections
     cursor.execute(sql.SQL("""
         SELECT pg_terminate_backend(pg_stat_activity.pid)
         FROM pg_stat_activity
@@ -60,26 +71,40 @@ def drop_database(conn_params, dbname):
     cursor.close()
     conn.close()
 
-def create_tables(conn):
-    """Create tables with columns for various sensitive data types."""
+def drop_tables(conn):
+    """Drop all tables if they exist to ensure a clean schema."""
     with conn.cursor() as cur:
-        # Table 1: customers
+        tables = [
+            'customers', 'employees', 'patients', 'financial_accounts',
+            'transactions', 'vehicles', 'web_logs', 'biometric_data'
+        ]
+        for table in tables:
+            cur.execute(sql.SQL("DROP TABLE IF EXISTS {} CASCADE").format(sql.Identifier(table)))
+        conn.commit()
+        print("Dropped existing tables (if any).")
+
+def create_tables(conn):
+    with conn.cursor() as cur:
+        # ---------- Customers (PII, financial) ----------
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS customers (
+            CREATE TABLE customers (
                 id SERIAL PRIMARY KEY,
-                name TEXT,
+                full_name TEXT,
                 email TEXT,
                 phone TEXT,
                 ssn TEXT,
+                dob DATE,
                 credit_card TEXT,
                 ip_address TEXT,
-                dob DATE,
-                passport TEXT
+                passport TEXT,
+                driver_license TEXT,
+                mac_address TEXT
             )
         """)
-        # Table 2: employees
+
+        # ---------- Employees (PII, salary) ----------
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS employees (
+            CREATE TABLE employees (
                 id SERIAL PRIMARY KEY,
                 full_name TEXT,
                 work_email TEXT,
@@ -87,28 +112,130 @@ def create_tables(conn):
                 phone TEXT,
                 ssn TEXT,
                 salary NUMERIC,
-                hire_date DATE
+                hire_date DATE,
+                driver_license TEXT,
+                passport TEXT
             )
         """)
-        # Table 3: logs (mixed data)
+
+        # ---------- Patients (HIPAA data) ----------
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS logs (
+            CREATE TABLE patients (
                 id SERIAL PRIMARY KEY,
-                event TEXT,
-                ip_address TEXT,
-                user_email TEXT,
-                timestamp TIMESTAMP
+                full_name TEXT,
+                dob DATE,
+                ssn TEXT,
+                mrn TEXT,
+                hicn TEXT,
+                diagnosis TEXT,
+                admission_date DATE,
+                discharge_date DATE,
+                email TEXT,
+                phone TEXT
             )
         """)
-        print("Tables created.")
+
+        # ---------- Financial Accounts (GLBA) ----------
+        cur.execute("""
+            CREATE TABLE financial_accounts (
+                id SERIAL PRIMARY KEY,
+                customer_id INTEGER,
+                account_number TEXT,
+                routing_number TEXT,
+                iban TEXT,
+                swift TEXT,
+                ein TEXT,
+                account_type TEXT
+            )
+        """)
+
+        # ---------- Transactions (PCI‑DSS) ----------
+        cur.execute("""
+            CREATE TABLE transactions (
+                id SERIAL PRIMARY KEY,
+                customer_id INTEGER,
+                credit_card TEXT,
+                amount NUMERIC,
+                transaction_date TIMESTAMP,
+                ip_address TEXT,
+                merchant TEXT
+            )
+        """)
+
+        # ---------- Vehicles (VIN, etc.) ----------
+        cur.execute("""
+            CREATE TABLE vehicles (
+                id SERIAL PRIMARY KEY,
+                vin TEXT,
+                make TEXT,
+                model TEXT,
+                year INTEGER,
+                owner_id INTEGER,
+                license_plate TEXT
+            )
+        """)
+
+        # ---------- Web Logs (GDPR) ----------
+        cur.execute("""
+            CREATE TABLE web_logs (
+                id SERIAL PRIMARY KEY,
+                ip_address TEXT,
+                user_agent TEXT,
+                user_email TEXT,
+                mac_address TEXT,
+                timestamp TIMESTAMP,
+                endpoint TEXT
+            )
+        """)
+
+        # ---------- Biometric Data (BIPA) ----------
+        cur.execute("""
+            CREATE TABLE biometric_data (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER,
+                fingerprint_hash TEXT,
+                face_template TEXT,
+                iris_code TEXT,
+                recorded_at TIMESTAMP
+            )
+        """)
+
+        print("All tables created.")
     conn.commit()
 
-def populate_tables(conn, num_rows=100):
-    """Populate tables with fake data."""
+# ----- Helper functions for generating custom fake data -----
+def generate_driver_license():
+    """Generate a US driver's license (2 letters + 6-8 digits)."""
+    letters = ''.join(random.choices('ABCDEFGHJKLMNPQRSTUVWXYZ', k=2))
+    digits = ''.join(random.choices('0123456789', k=random.randint(6, 8)))
+    return letters + digits
+
+def generate_ein():
+    """Generate a fake EIN in format XX-XXXXXXX"""
+    return f"{random.randint(10, 99)}-{random.randint(1000000, 9999999)}"
+
+def generate_mrn():
+    """Generate a fake Medical Record Number (MRN + 6-8 digits)"""
+    return f"MRN{random.randint(100000, 99999999)}"
+
+def generate_hicn():
+    """Generate a fake HICN: 9-11 alphanumeric, often starting with a letter"""
+    chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789"
+    length = random.randint(9, 11)
+    return ''.join(random.choices(chars, k=length))
+
+def generate_account_number():
+    """Generate a random 10-12 digit bank account number"""
+    return str(random.randint(10**9, 10**12 - 1))
+
+def generate_biometric_hash():
+    """Generate a random 64-character hex string (simulate SHA-256)"""
+    return fake.sha256()
+
+def populate_tables(conn, num_rows):
     with conn.cursor() as cur:
-        # Populate customers
+        # ----- customers -----
         for _ in range(num_rows):
-            # Generate credit card number based on type
             cc_type = random.choice(['visa', 'mastercard', 'amex'])
             if cc_type == 'visa':
                 cc = fake.credit_card_number(card_type='visa')
@@ -117,45 +244,144 @@ def populate_tables(conn, num_rows=100):
             else:
                 cc = fake.credit_card_number(card_type='amex')
             cur.execute("""
-                INSERT INTO customers (name, email, phone, ssn, credit_card, ip_address, dob, passport)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO customers
+                (full_name, email, phone, ssn, dob, credit_card, ip_address, passport, driver_license, mac_address)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 fake.name(),
                 fake.email(),
                 fake.phone_number(),
                 fake.ssn(),
+                fake.date_of_birth(minimum_age=18, maximum_age=90),
                 cc,
                 fake.ipv4(),
-                fake.date_of_birth(minimum_age=18, maximum_age=90),
-                fake.passport_number()
+                fake.passport_number(),
+                generate_driver_license(),
+                fake.mac_address()
             ))
-        # Populate employees
+
+        # ----- employees -----
         for _ in range(num_rows):
             cur.execute("""
-                INSERT INTO employees (full_name, work_email, personal_email, phone, ssn, salary, hire_date)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO employees
+                (full_name, work_email, personal_email, phone, ssn, salary, hire_date, driver_license, passport)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 fake.name(),
                 fake.company_email(),
                 fake.email(),
                 fake.phone_number(),
                 fake.ssn(),
-                random.randint(30000, 120000),
-                fake.date_between(start_date='-10y', end_date='today')
+                random.randint(30000, 150000),
+                fake.date_between(start_date='-15y', end_date='today'),
+                generate_driver_license(),
+                fake.passport_number()
             ))
-        # Populate logs
+
+        # ----- patients (HIPAA) -----
         for _ in range(num_rows):
             cur.execute("""
-                INSERT INTO logs (event, ip_address, user_email, timestamp)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO patients
+                (full_name, dob, ssn, mrn, hicn, diagnosis, admission_date, discharge_date, email, phone)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
-                fake.sentence(),
-                fake.ipv4(),
+                fake.name(),
+                fake.date_of_birth(minimum_age=0, maximum_age=100),
+                fake.ssn(),
+                generate_mrn(),
+                generate_hicn(),
+                fake.sentence(nb_words=5),
+                fake.date_between(start_date='-5y', end_date='today'),
+                fake.date_between(start_date='-5y', end_date='today'),
                 fake.email(),
-                fake.date_time_this_decade()
+                fake.phone_number()
             ))
-        print(f"Inserted {num_rows} rows into each table.")
-    conn.commit()
+
+        # ----- financial_accounts -----
+        num_accounts = num_rows * 2
+        for _ in range(num_accounts):
+            cur.execute("""
+                INSERT INTO financial_accounts
+                (customer_id, account_number, iban, swift, ein, account_type)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (
+                random.randint(1, num_rows),
+                generate_account_number(),
+                fake.iban(),
+                fake.swift(),
+                generate_ein(),
+                random.choice(['checking', 'savings', 'investment'])
+            ))
+
+        # ----- transactions -----
+        for _ in range(num_rows * 3):
+            cc_type = random.choice(['visa', 'mastercard', 'amex'])
+            if cc_type == 'visa':
+                cc = fake.credit_card_number(card_type='visa')
+            elif cc_type == 'mastercard':
+                cc = fake.credit_card_number(card_type='mastercard')
+            else:
+                cc = fake.credit_card_number(card_type='amex')
+            cur.execute("""
+                INSERT INTO transactions
+                (customer_id, credit_card, amount, transaction_date, ip_address, merchant)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (
+                random.randint(1, num_rows),
+                cc,
+                round(random.uniform(5, 5000), 2),
+                fake.date_time_this_year(),
+                fake.ipv4(),
+                fake.company()
+            ))
+
+        # ----- vehicles -----
+        for _ in range(num_rows // 2):
+            cur.execute("""
+                INSERT INTO vehicles
+                (vin, make, model, year, owner_id, license_plate)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (
+                fake.vin(),
+                fake.company(),
+                fake.word(),
+                random.randint(1990, 2025),
+                random.randint(1, num_rows),
+                fake.license_plate()
+            ))
+
+        # ----- web_logs -----
+        for _ in range(num_rows * 3):
+            cur.execute("""
+                INSERT INTO web_logs
+                (ip_address, user_agent, user_email, mac_address, timestamp, endpoint)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (
+                fake.ipv4(),
+                fake.user_agent(),
+                fake.email(),
+                fake.mac_address(),
+                fake.date_time_this_year(),
+                fake.uri_path()
+            ))
+
+        # ----- biometric_data -----
+        for _ in range(num_rows // 2):
+            cur.execute("""
+                INSERT INTO biometric_data
+                (user_id, fingerprint_hash, face_template, iris_code, recorded_at)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                random.randint(1, num_rows),
+                generate_biometric_hash(),
+                fake.sha256(),
+                fake.sha256(),
+                fake.date_time_this_year()
+            ))
+
+        conn.commit()
+        print(f"Inserted data into all tables. Rows per table (approx): customers={num_rows}, employees={num_rows}, patients={num_rows}, "
+              f"financial_accounts={num_accounts}, transactions={num_rows*3}, vehicles={num_rows//2}, web_logs={num_rows*3}, biometric_data={num_rows//2}")
 
 def main():
     args = parse_args()
@@ -163,22 +389,22 @@ def main():
         'host': args.host,
         'port': args.port,
         'user': args.user,
-        'password': args.password,
+        'password': resolve_password(args),
     }
 
     if args.drop:
         drop_database(conn_params, args.dbname)
 
-    # Create database
     create_database(conn_params, args.dbname)
 
-    # Connect to the newly created (or existing) database
     conn_params['dbname'] = args.dbname
     conn = psycopg2.connect(**conn_params)
     conn.autocommit = False
 
+    # Drop existing tables to ensure a clean schema
+    drop_tables(conn)
     create_tables(conn)
-    populate_tables(conn, num_rows=200)  # Adjust number as needed
+    populate_tables(conn, args.rows)
 
     conn.close()
     print(f"Setup complete. You can now run SecgresDB on database '{args.dbname}'.")

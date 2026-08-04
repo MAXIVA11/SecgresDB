@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "secgresdb"
+version = "0.2.0"
+description = "PostgreSQL sensitive data scanner for compliance audits (GDPR, CCPA, PCI-DSS, GLBA, HIPAA)"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+dependencies = [
+    "psycopg2-binary==2.9.11",
+    "rich==14.3.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.4",
+    "faker==40.11.1",
+]
+
+[project.scripts]
+secgresdb = "secgresdb.cli:main"
+
+[tool.setuptools]
+packages = ["secgresdb"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
